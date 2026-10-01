@@ -2,27 +2,22 @@
 <!--
   Unity merges this into the manifest it (and the Meta XR SDK's setup
   wizard) generate for the Quest build, at Assets/Plugins/Android/AndroidManifest.xml.
-  Two additions on top of whatever's already there from the Meta XR SDK setup:
+  On top of whatever's already there from the Meta XR SDK setup:
 
     1. INTERNET permission — needed to reach the XpressMedia backend at all.
-       Unity's default template doesn't include it.
-    2. An intent-filter for xpressmedia://oauth-callback so Quest's system
-       browser can hand control back to this app after MPARADISE sign-in —
-       the SAME redirect URI xpressmedia:// the iOS app already uses, so one
-       MPARADISE app registration covers both clients (see the VR README's
-       "Registering with MPARADISE" section).
+    2. usesCleartextTraffic="true" — lets the app talk to Config.BackendBaseURL
+       over plain http:// during local dev (a LAN IP has no TLS cert). Turn
+       this off (or switch BackendBaseURL to https://) before shipping.
+    3. An intent-filter for xpressmedia://oauth-callback so Quest's system
+       browser can hand control back to this app after MPARADISE sign-in.
 
-  If the Meta XR SDK's setup wizard already created a manifest here (it
-  usually does, with VR-specific <meta-data> tags), MERGE these two pieces
-  into it rather than replacing the whole file. Also double check the
-  activity name below actually matches your project — the Meta XR SDK's
-  templates sometimes use their own player activity subclass instead of
-  Unity's default; if so, move the <intent-filter> onto that activity.
+  If the Meta XR SDK's setup wizard already created a manifest here, MERGE
+  these pieces into it rather than replacing the whole file.
 -->
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
     <uses-permission android:name="android.permission.INTERNET" />
 
-    <application>
+    <application android:usesCleartextTraffic="true">
         <activity android:name="com.unity3d.player.UnityPlayerActivity">
             <intent-filter>
                 <action android:name="android.intent.action.VIEW" />

@@ -5,12 +5,9 @@ using UnityEngine;
 namespace XpressMediaVR
 {
     /// Owns the signed-in XMUser + JWT for the running session, and persists
-    /// the JWT across app restarts. Mirrors SessionStore.swift's role, but
-    /// uses PlayerPrefs instead of Keychain — Quest/Android has no exact
-    /// Keychain equivalent reachable from plain Unity. PlayerPrefs is NOT
-    /// encrypted at rest; treat this as a placeholder to swap for Android's
-    /// EncryptedSharedPreferences (via a small native plugin) before shipping
-    /// for real, same spirit as KeychainHelper.swift on iOS.
+    /// the JWT across app restarts. Uses PlayerPrefs (not encrypted at rest —
+    /// swap for Android's EncryptedSharedPreferences via a small native
+    /// plugin before shipping for real).
     public class SessionStore : MonoBehaviour
     {
         public static SessionStore Instance { get; private set; }
@@ -21,16 +18,16 @@ namespace XpressMediaVR
         public bool IsSignedIn => CurrentUser != null;
         public bool IsRestoringSession { get; private set; } = true;
 
-        /// Fired whenever sign-in state changes — drive scene/UI switches off
-        /// this instead of polling, same role RootView's `if session.isSignedIn`
-        /// plays in XpressMediaApp.swift.
         public event Action OnSessionChanged;
 
         private void Awake()
         {
             if (Instance != null && Instance != this) { Destroy(gameObject); return; }
             Instance = this;
-            DontDestroyOnLoad(gameObject);
+            // DontDestroyOnLoad only works in Play Mode — this component also
+            // gets added by the Editor's scene-building script, which runs in
+            // Edit Mode, so guard the call to avoid a spurious Console error there.
+            if (Application.isPlaying) DontDestroyOnLoad(gameObject);
         }
 
         private async void Start()
@@ -45,8 +42,6 @@ namespace XpressMediaVR
                 }
                 catch
                 {
-                    // Saved token no longer valid — fall back to signed-out,
-                    // same as SessionStore.swift's restore-session failure path.
                     PlayerPrefs.DeleteKey(TokenKey);
                     APIClient.Shared.AuthToken = null;
                 }

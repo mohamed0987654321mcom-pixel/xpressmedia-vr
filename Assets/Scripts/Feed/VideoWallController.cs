@@ -4,10 +4,7 @@ using UnityEngine.Video;
 namespace XpressMediaVR
 {
     /// Streams the current feed video onto the curved wall mesh via Unity's
-    /// VideoPlayer -> RenderTexture pipeline. The backend already serves
-    /// uploaded .mp4/.mov files as plain HTTP (see backend/src/storage.js),
-    /// so this is just pointing a normal Unity VideoPlayer at a URL — no
-    /// VR-specific server change needed.
+    /// VideoPlayer -> RenderTexture pipeline.
     [RequireComponent(typeof(VideoPlayer))]
     public class VideoWallController : MonoBehaviour
     {
@@ -16,6 +13,7 @@ namespace XpressMediaVR
         public RenderTexture renderTexture;
 
         private VideoPlayer _player;
+        private bool _muted;
 
         private void Awake()
         {
@@ -25,6 +23,7 @@ namespace XpressMediaVR
             _player.renderMode = VideoRenderMode.RenderTexture;
             _player.targetTexture = renderTexture;
             _player.isLooping = true;
+            _player.audioOutputMode = VideoAudioOutputMode.Direct;
             wallRenderer.material.mainTexture = renderTexture;
         }
 
@@ -33,6 +32,7 @@ namespace XpressMediaVR
             _player.url = video.VideoUrl;
             _player.prepareCompleted -= OnPrepared;
             _player.prepareCompleted += OnPrepared;
+            _player.SetDirectAudioMute(0, _muted);
             _player.Prepare();
         }
 
@@ -41,5 +41,12 @@ namespace XpressMediaVR
         public void Pause() => _player.Pause();
         public void Resume() => _player.Play();
         public void Stop() => _player.Stop();
+
+        public bool ToggleMute()
+        {
+            _muted = !_muted;
+            _player.SetDirectAudioMute(0, _muted);
+            return _muted;
+        }
     }
 }

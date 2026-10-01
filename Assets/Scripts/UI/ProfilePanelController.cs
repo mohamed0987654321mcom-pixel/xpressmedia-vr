@@ -5,10 +5,8 @@ using UnityEngine.UI;
 
 namespace XpressMediaVR
 {
-    /// World-space panel port of ProfileView.swift — stats, bio, and a
-    /// scrolling grid of the user's videos. Functional, but hasn't had the
-    /// Feed's full spatial (curved-wall) treatment yet — see the VR README's
-    /// "What's built vs what's stubbed".
+    /// World-space panel port of ProfileView.swift — banner, avatar, stats,
+    /// bio, Edit-profile button, and a scrolling grid of the user's videos.
     public class ProfilePanelController : MonoBehaviour
     {
         public TMP_Text displayNameText;
@@ -18,8 +16,22 @@ namespace XpressMediaVR
         public TMP_Text followingCountText;
         public TMP_Text likesCountText;
         public RawImage avatarImage;
-        public Transform videoGridContent;      // a GridLayoutGroup container
-        public GameObject videoThumbnailPrefab;  // a prefab with a RawImage + TMP_Text
+        public Button editProfileButton;
+        public Transform videoGridContent;
+        public GameObject videoThumbnailPrefab;
+
+        private void Awake()
+        {
+            if (editProfileButton != null)
+                editProfileButton.onClick.AddListener(() =>
+                    Debug.Log("[Profile] edit profile tapped (not implemented yet)"));
+        }
+
+        public void ShowMe()
+        {
+            var me = SessionStore.Instance != null ? SessionStore.Instance.CurrentUser : null;
+            if (me != null) Show(me.Handle);
+        }
 
         public async void Show(string idOrHandle)
         {
@@ -42,6 +54,7 @@ namespace XpressMediaVR
             followerCountText.text = FormatCount(user.FollowerCount);
             followingCountText.text = FormatCount(user.FollowingCount);
             likesCountText.text = FormatCount(user.LikesReceived);
+            if (editProfileButton != null) editProfileButton.gameObject.SetActive(user.IsMe);
             if (!string.IsNullOrEmpty(user.AvatarUrl))
                 StartCoroutine(ImageLoader.LoadInto(user.AvatarUrl, avatarImage));
 

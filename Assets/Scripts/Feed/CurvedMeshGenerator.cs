@@ -4,10 +4,8 @@ namespace XpressMediaVR
 {
     /// Builds a curved rectangular mesh (a cylindrical segment) at runtime —
     /// the Feed's video wall wraps gently around the viewer instead of
-    /// sitting on a flat plane, which is the actual "spatial redesign" part
-    /// of this screen rather than a flat panel bolted into 3D space.
-    /// Procedural on purpose: no hand-authored .fbx to ship, so there's
-    /// nothing here that can silently fail to import.
+    /// sitting on a flat plane. Procedural on purpose: nothing here can
+    /// silently fail to import like a hand-authored .fbx could.
     [RequireComponent(typeof(MeshFilter), typeof(MeshRenderer))]
     public class CurvedMeshGenerator : MonoBehaviour
     {
@@ -26,7 +24,7 @@ namespace XpressMediaVR
         public void Generate()
         {
             var mesh = new Mesh { name = "CurvedVideoWall" };
-            var totalAngle = width / radius; // arc length = radius * angle
+            var totalAngle = width / radius;
             var vertices = new Vector3[(segments + 1) * 2];
             var uvs = new Vector2[vertices.Length];
             var triangles = new int[segments * 6];
@@ -36,7 +34,7 @@ namespace XpressMediaVR
                 float t = (float)i / segments;
                 float angle = -totalAngle / 2f + totalAngle * t;
                 float x = Mathf.Sin(angle) * radius;
-                float z = Mathf.Cos(angle) * radius - radius; // bows away from the viewer standing at z=0
+                float z = Mathf.Cos(angle) * radius; // arc centered "radius" meters in front of local origin
 
                 vertices[i * 2] = new Vector3(x, -height / 2f, z);
                 vertices[i * 2 + 1] = new Vector3(x, height / 2f, z);

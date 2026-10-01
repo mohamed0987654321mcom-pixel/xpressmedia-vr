@@ -5,14 +5,12 @@ using UnityEngine.UI;
 
 namespace XpressMediaVR
 {
-    /// World-space port of DiscoverView.swift's user search half (type a
-    /// query, see matching people). The trending-grid half is left for the
-    /// same follow-up pass as the rest of these panels — see the VR README.
+    /// World-space port of DiscoverView.swift's user-search half.
     public class DiscoverPanelController : MonoBehaviour
     {
         public TMP_InputField searchField;
         public Transform resultsContent;
-        public GameObject userRowPrefab; // a RawImage (avatar) + two TMP_Text (name, handle)
+        public GameObject userRowPrefab;
 
         private void Awake() => searchField.onEndEdit.AddListener(_ => Search());
 

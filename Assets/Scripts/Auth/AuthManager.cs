@@ -12,11 +12,8 @@ namespace XpressMediaVR
     /// Ports MParadiseAuthManager.swift's PKCE flow for Quest. There's no
     /// ASWebAuthenticationSession equivalent on Horizon OS (it's Android
     /// under the hood), so this opens MPARADISE's login page in Quest's
-    /// system browser — Quest shows it as a floating 2D panel automatically,
-    /// no extra work needed for that part — and gets control back via the
-    /// xpressmedia://oauth-callback deep link declared in
-    /// Assets/Plugins/Android/AndroidManifest.xml. Same redirect URI the iOS
-    /// app already uses, so one MPARADISE app registration covers both.
+    /// system browser and gets control back via the xpressmedia://oauth-callback
+    /// deep link declared in Assets/Plugins/Android/AndroidManifest.xml.
     public class AuthManager : MonoBehaviour
     {
         public static AuthManager Instance { get; private set; }
@@ -29,21 +26,14 @@ namespace XpressMediaVR
         {
             if (Instance != null && Instance != this) { Destroy(gameObject); return; }
             Instance = this;
-            DontDestroyOnLoad(gameObject);
+            if (Application.isPlaying) DontDestroyOnLoad(gameObject);
             Application.deepLinkActivated += OnDeepLinkActivated;
-            // Cold start: the app was launched BY the callback URL itself
-            // (Quest opened it directly instead of resuming a backgrounded app).
             if (!string.IsNullOrEmpty(Application.absoluteURL))
                 OnDeepLinkActivated(Application.absoluteURL);
         }
 
         private void OnDestroy() => Application.deepLinkActivated -= OnDeepLinkActivated;
 
-        /// Starts the browser hop and returns the MPARADISE access token once
-        /// the callback comes back and the code exchange succeeds. The
-        /// caller (SessionStore) then hands that token to XpressMedia's own
-        /// backend `/api/auth/mparadise` to mint an app session — exactly
-        /// the same handoff the iOS app does.
         public Task<string> SignIn()
         {
             _pendingSignIn = new TaskCompletionSource<string>();
@@ -103,10 +93,6 @@ namespace XpressMediaVR
             }
         }
 
-        // MARK: Token exchange (PKCE — no client_secret, per AI.md "Native apps").
-        // Goes straight to MPARADISE, same as MParadiseAuthManager.swift — our
-        // own backend only ever sees the resulting access_token afterward.
-
         private async Task<string> ExchangeCodeForToken(string code, string codeVerifier)
         {
             var payload = new Dictionary<string, string>
@@ -140,9 +126,6 @@ namespace XpressMediaVR
         [Serializable]
         private class TokenResponse { public string access_token; }
 
-        // MARK: PKCE helpers — same recipe as MParadiseAuthManager.swift:
-        // 64 random bytes for the verifier, SHA-256 + base64url for the challenge.
-
         private static string MakeCodeVerifier()
         {
             var bytes = new byte[64];
@@ -160,9 +143,6 @@ namespace XpressMediaVR
         private static string Base64UrlEncode(byte[] data) =>
             Convert.ToBase64String(data).Replace('+', '-').Replace('/', '_').TrimEnd('=');
 
-        /// Unity doesn't ship System.Web (no HttpUtility on this runtime), so
-        /// this is a small hand-rolled query-string parser instead of relying
-        /// on an assembly that may not resolve in an IL2CPP/Android build.
         private static Dictionary<string, string> ParseQuery(string url)
         {
             var result = new Dictionary<string, string>();

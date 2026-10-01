@@ -3,8 +3,7 @@ using Newtonsoft.Json;
 
 namespace XpressMediaVR
 {
-    /// Mirrors the JSON shape from `serializeUser` in the backend
-    /// (backend/src/serializers.js) — same fields as CoreModels.swift's XMUser.
+    /// Mirrors `serializeUser` in backend/src/serializers.js.
     public class XMUser
     {
         [JsonProperty("id")] public int Id;
@@ -23,7 +22,7 @@ namespace XpressMediaVR
         [JsonProperty("createdAt")] public string CreatedAt;
     }
 
-    /// Mirrors MPARADISE's `profile.appearance` shape (AI.md, `/oauth/userinfo`).
+    /// Mirrors MPARADISE's `profile.appearance` shape.
     public class XMAppearance
     {
         [JsonProperty("background")] public XMBackground Background;
@@ -106,7 +105,7 @@ namespace XpressMediaVR
         [JsonProperty("createdAt")] public string CreatedAt;
     }
 
-    /// One row of `GET /api/messages/conversations`.
+    /// One row of GET /api/messages/conversations.
     public class Conversation
     {
         [JsonProperty("id")] public int Id;
@@ -114,7 +113,7 @@ namespace XpressMediaVR
         [JsonProperty("lastMessage")] public ChatMessage LastMessage;
     }
 
-    // MARK: Response envelope shapes — match the backend's { "key": ... } wrappers exactly.
+    // MARK: Response envelope shapes — match the backend's { "key": ... } wrappers.
     public class UserWrapper { [JsonProperty("user")] public XMUser User; }
     public class UsersWrapper { [JsonProperty("users")] public List<XMUser> Users; }
     public class VideoWrapper { [JsonProperty("video")] public VideoPost Video; }

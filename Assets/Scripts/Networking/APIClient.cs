@@ -14,10 +14,9 @@ namespace XpressMediaVR
         public ApiException(int statusCode, string message) : base(message) { StatusCode = statusCode; }
     }
 
-    /// Thin async wrapper around the XpressMedia backend REST API — the exact
-    /// same endpoints as XpressMediaApp/Networking/APIClient.swift. The Quest
-    /// client is just another consumer of the same backend; nothing on the
-    /// server needs to change for this to work.
+    /// Thin async wrapper around the XpressMedia backend REST API — the same
+    /// endpoints XpressMediaApp/Networking/APIClient.swift calls. The Quest
+    /// client is just another consumer of the same backend.
     public class APIClient
     {
         public static readonly APIClient Shared = new APIClient();
@@ -145,9 +144,7 @@ namespace XpressMediaVR
             (await Json<VideoWrapper>($"/api/videos/{id}/like", "DELETE")).Video;
 
         /// Uploads a video file (multipart/form-data). `filePath` is a local
-        /// path on the headset's filesystem — see the VR README's "Getting a
-        /// video onto the headset" for how one gets there, since Quest has no
-        /// Photos library / PhotosPicker equivalent to pick from.
+        /// path on the headset's filesystem.
         public async Task<VideoPost> UploadVideo(string filePath, string caption, int? duetOfVideoId = null)
         {
             if (string.IsNullOrEmpty(AuthToken)) throw new ApiException(401, "You're not signed in.");

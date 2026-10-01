@@ -4,35 +4,52 @@ using UnityEngine.UI;
 
 namespace XpressMediaVR
 {
-    /// The Feed's like/comment/follow rail, as a small world-space panel
-    /// anchored beside the video wall (see the VR README's "Scene setup" for
-    /// the exact hierarchy) rather than FeedVideoCell.swift's screen-edge
-    /// overlay — VR has no screen edge to pin to, so it floats in space next
-    /// to the wall instead.
+    /// The Feed's transparent, icon-only action rail — ported from
+    /// FeedVideoCell.swift's actionColumn (avatar, like, comment, save,
+    /// share, mute, delete-if-owner). Deliberately has NO Follow button —
+    /// the iOS action column doesn't have one either; following happens
+    /// from the Profile screen.
     public class FeedActionRail : MonoBehaviour
     {
+        public Button avatarButton;
+        public RawImage avatarImage;
         public Button likeButton;
         public Image likeIcon;
         public TMP_Text likeCountText;
         public Button commentButton;
         public TMP_Text commentCountText;
-        public Button followButton;
-        public TMP_Text followButtonLabel;
+        public Button saveButton;
+        public Image saveIcon;
+        public Button shareButton;
+        public Button muteButton;
+        public TMP_Text muteButtonLabel;
+        public Button deleteButton;
         public CommentsPanelController commentsPanel;
+        public VideoWallController videoWall;
+
+        public System.Action<XMUser> OnAvatarTapped;
 
         private VideoPost _video;
+        private bool _saved;
 
         private void Awake()
         {
             likeButton.onClick.AddListener(ToggleLike);
-            followButton.onClick.AddListener(ToggleFollow);
             commentButton.onClick.AddListener(OpenComments);
+            if (saveButton != null) saveButton.onClick.AddListener(ToggleSave);
+            if (shareButton != null) shareButton.onClick.AddListener(Share);
+            if (muteButton != null) muteButton.onClick.AddListener(ToggleMute);
+            if (deleteButton != null) deleteButton.onClick.AddListener(DeleteVideo);
+            if (avatarButton != null) avatarButton.onClick.AddListener(() => OnAvatarTapped?.Invoke(_video?.Owner));
         }
 
         public void Bind(VideoPost video)
         {
             _video = video;
+            _saved = false;
             Refresh();
+            if (avatarImage != null && !string.IsNullOrEmpty(video.Owner?.AvatarUrl))
+                StartCoroutine(ImageLoader.LoadInto(video.Owner.AvatarUrl, avatarImage));
         }
 
         private void Refresh()
@@ -41,8 +58,8 @@ namespace XpressMediaVR
             likeCountText.text = FormatCount(_video.LikeCount);
             commentCountText.text = FormatCount(_video.CommentCount);
             if (likeIcon != null) likeIcon.color = _video.IsLiked ? XM.Action : Color.white;
-            if (_video.Owner != null && followButtonLabel != null)
-                followButtonLabel.text = _video.Owner.IsFollowedByViewer ? "Following" : "Follow";
+            if (saveIcon != null) saveIcon.color = _saved ? XM.Action : Color.white;
+            if (deleteButton != null) deleteButton.gameObject.SetActive(_video.Owner != null && _video.Owner.IsMe);
         }
 
         private async void ToggleLike()
@@ -58,18 +75,34 @@ namespace XpressMediaVR
             catch (System.Exception e) { Debug.LogError($"[FeedActionRail] like failed: {e.Message}"); }
         }
 
-        private async void ToggleFollow()
+        private void ToggleSave()
         {
-            if (_video?.Owner == null) return;
+            _saved = !_saved;
+            Refresh();
+        }
+
+        private void Share()
+        {
+            Debug.Log($"[FeedActionRail] share tapped for video {_video?.Id} (not implemented yet)");
+        }
+
+        private void ToggleMute()
+        {
+            if (videoWall == null) return;
+            var muted = videoWall.ToggleMute();
+            if (muteButtonLabel != null) muteButtonLabel.text = muted ? "Unmute" : "Mute";
+        }
+
+        private async void DeleteVideo()
+        {
+            if (_video == null) return;
             try
             {
-                var updated = _video.Owner.IsFollowedByViewer
-                    ? await APIClient.Shared.Unfollow(_video.Owner.Handle)
-                    : await APIClient.Shared.Follow(_video.Owner.Handle);
-                _video.Owner = updated;
-                Refresh();
+                await APIClient.Shared.DeleteVideo(_video.Id);
+                var feed = GetComponentInParent<FeedController>();
+                feed?.RemoveCurrent();
             }
-            catch (System.Exception e) { Debug.LogError($"[FeedActionRail] follow failed: {e.Message}"); }
+            catch (System.Exception e) { Debug.LogError($"[FeedActionRail] delete failed: {e.Message}"); }
         }
 
         private void OpenComments()

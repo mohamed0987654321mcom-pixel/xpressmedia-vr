@@ -6,14 +6,13 @@ using UnityEngine.UI;
 namespace XpressMediaVR
 {
     /// World-space port of InboxView.swift/ChatView.swift's conversation
-    /// list and a thread view. Functional, not yet given the Feed's full
-    /// spatial treatment — see the VR README's "What's built vs stubbed".
+    /// list and a thread view.
     public class InboxPanelController : MonoBehaviour
     {
         public Transform conversationListContent;
-        public GameObject conversationRowPrefab; // a Button + two TMP_Text (name, last message)
+        public GameObject conversationRowPrefab;
         public Transform messageListContent;
-        public GameObject messageBubblePrefab;    // one TMP_Text
+        public GameObject messageBubblePrefab;
         public TMP_InputField composerField;
 
         private int? _openConversationId;
@@ -60,7 +59,7 @@ namespace XpressMediaVR
             {
                 await APIClient.Shared.SendMessage(_openConversationId.Value, composerField.text);
                 composerField.text = "";
-                OpenConversation(_openConversationId.Value); // simplest refresh: re-fetch the thread
+                OpenConversation(_openConversationId.Value);
             }
             catch (System.Exception e) { Debug.LogError($"[Inbox] send failed: {e.Message}"); }
         }

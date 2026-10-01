@@ -5,12 +5,13 @@ using UnityEngine;
 
 namespace XpressMediaVR
 {
-    /// World-space port of CommentsSheetView.swift — opened from the Feed's
-    /// action rail (FeedActionRail already calls Show(video.Id) for you).
+    /// World-space port of CommentsSheetView.swift — light-themed (ground
+    /// background, ink text), NOT a dark overlay, opened from the Feed's
+    /// action rail.
     public class CommentsPanelController : MonoBehaviour
     {
         public Transform commentListContent;
-        public GameObject commentRowPrefab; // two TMP_Text (author, body)
+        public GameObject commentRowPrefab;
         public TMP_InputField composerField;
         public GameObject panelRoot;
 
